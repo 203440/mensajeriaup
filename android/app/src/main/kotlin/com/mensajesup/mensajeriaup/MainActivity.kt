@@ -1,0 +1,6 @@
+package com.mensajesup.mensajeriaup
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}

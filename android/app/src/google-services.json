@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "24639392990",
+    "project_id": "mensajesup-a835d",
+    "storage_bucket": "mensajesup-a835d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:24639392990:android:b669674e8e8ae3d3dd464f",
+        "android_client_info": {
+          "package_name": "com.mensajesup.mensajeriaup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "24639392990-to5l7anc3vcrl4eolbt5f4s9ms7vaekn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCY4HftfbVTgStjYuhFmXjIhQ8AmhllqDs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "24639392990-to5l7anc3vcrl4eolbt5f4s9ms7vaekn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
