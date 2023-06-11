@@ -26,7 +26,7 @@ class _RegisterState extends State<Register> {
       appBar: AppBar(
         title: Text('Registro'),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -34,7 +34,7 @@ class _RegisterState extends State<Register> {
             children: <Widget>[
               const SizedBox(height: 150.0),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(15),
                 child: TextFormField(
                   decoration: InputDecoration(labelText: 'Nombre de usuario'),
                   validator: (value) {
@@ -49,7 +49,7 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(15.0),
                 child: TextFormField(
                   decoration: InputDecoration(labelText: 'Correo electrónico'),
                   validator: (value) {
@@ -64,7 +64,7 @@ class _RegisterState extends State<Register> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(15.0),
                 child: TextFormField(
                   decoration: InputDecoration(labelText: 'Contraseña'),
                   obscureText: true,
@@ -94,7 +94,7 @@ class _RegisterState extends State<Register> {
                   }
                 },
               ),
-              const SizedBox(height: 30.0),
+              const SizedBox(height: 20.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   primary: Color.fromARGB(255, 5, 130,

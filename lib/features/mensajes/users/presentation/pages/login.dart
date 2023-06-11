@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mensajeriaup/features/mensajes/chat/presentation/pages/home_chat.dart';
+import 'package:mensajeriaup/features/mensajes/chat/presentation/pages/vista.dart';
 import 'package:mensajeriaup/features/mensajes/users/presentation/blocs/users_bloc.dart';
 import 'package:mensajeriaup/features/mensajes/users/presentation/pages/principal.dart';
 
@@ -92,11 +94,10 @@ class _LoginPageState extends State<LoginPage> {
 
                 context.read<UsersBloc>().add(
                     PressLoginUserButton(username: username, passw: password));
-
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const Principal(),
+                    builder: (context) => ChatScreen(),
                   ),
                 );
               },
