@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:mensajeriaup/features/mensajes/users/presentation/blocs/users_bloc.dart';
+import 'package:mensajeriaup/features/mensajes/users/presentation/pages/login.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -24,7 +25,11 @@ class _RegisterState extends State<Register> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Registro'),
+        backgroundColor: Color.fromRGBO(71, 134, 250, 1),
+        title: Text('Registro',
+            style: TextStyle(
+              color: Colors.white,
+            )),
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16.0),
@@ -36,7 +41,10 @@ class _RegisterState extends State<Register> {
               Padding(
                 padding: const EdgeInsets.all(15),
                 child: TextFormField(
-                  decoration: InputDecoration(labelText: 'Nombre de usuario'),
+                  decoration: InputDecoration(
+                    labelText: 'Nombre de usuario',
+                    prefixIcon: Icon(Icons.person),
+                  ),
                   validator: (value) {
                     if (value!.isEmpty) {
                       return 'Por favor, introduce un nombre de usuario';
@@ -51,7 +59,10 @@ class _RegisterState extends State<Register> {
               Padding(
                 padding: const EdgeInsets.all(15.0),
                 child: TextFormField(
-                  decoration: InputDecoration(labelText: 'Correo electrónico'),
+                  decoration: InputDecoration(
+                    labelText: 'Correo electrónico',
+                    prefixIcon: Icon(Icons.email),
+                  ),
                   validator: (value) {
                     if (value!.isEmpty) {
                       return 'Por favor, introduce un correo electrónico';
@@ -66,7 +77,10 @@ class _RegisterState extends State<Register> {
               Padding(
                 padding: const EdgeInsets.all(15.0),
                 child: TextFormField(
-                  decoration: InputDecoration(labelText: 'Contraseña'),
+                  decoration: InputDecoration(
+                    labelText: 'Contraseña',
+                    prefixIcon: Icon(Icons.password),
+                  ),
                   obscureText: true,
                   validator: (value) {
                     if (value!.isEmpty) {
@@ -112,9 +126,19 @@ class _RegisterState extends State<Register> {
                     print('Nombre de usuario: $_username');
                     print('Correo electrónico: $_email');
                     print('Contraseña: $_password');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginPage()),
+                    );
                   }
                 },
-                child: Text('Registrarse'),
+                child: Text(
+                  'Registrarse',
+                  style: TextStyle(
+                    color: Colors
+                        .white, // Cambia "Colors.white" por el color que desees para el texto
+                  ),
+                ),
               ),
             ],
           ),

@@ -9,7 +9,13 @@ class ChatScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mensajes'),
+        backgroundColor: Color.fromRGBO(71, 134, 250, 1),
+        title: Text(
+          'Mensajes',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
       ),
       body: Column(
         children: [
@@ -45,7 +51,10 @@ class ChatScreen extends StatelessWidget {
         onPressed: () {
           // Acción al hacer clic en el botón flotante
         },
-        child: Icon(Icons.add),
+        backgroundColor: Color.fromRGBO(71, 134, 250, 1),
+        child: Icon(
+          Icons.add,
+        ),
       ),
     );
   }

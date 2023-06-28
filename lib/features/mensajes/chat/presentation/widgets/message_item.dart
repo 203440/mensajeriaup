@@ -17,8 +17,22 @@ class MessageItem extends StatelessWidget {
     );
   }
 
+  Widget buildVideoWidget() {
+    if (message.videoUrl != null) {
+      final videoPlayerController =
+          VideoPlayerController.network(message.videoUrl!);
+      return AspectRatio(
+        aspectRatio: videoPlayerController.value.aspectRatio,
+        child: VideoPlayer(videoPlayerController),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
+
   Widget _buildVideoMessage() {
-    final videoPlayerController =
+    return buildVideoWidget();
+    /*final videoPlayerController =
         VideoPlayerController.network(message.videoUrl!);
     return FutureBuilder(
       future: videoPlayerController.initialize(),
@@ -32,7 +46,7 @@ class MessageItem extends StatelessWidget {
           return CircularProgressIndicator();
         }
       },
-    );
+    );*/
   }
 
   // Widget _buildAudioMessage() {
@@ -42,13 +56,25 @@ class MessageItem extends StatelessWidget {
   //     onTap: () => audioPlayer.play(message.audioUrl!),
   //   );
   // }
+  Widget buildImageWidget() {
+    if (message.imageUrl != null) {
+      return CachedNetworkImage(
+        imageUrl: message.imageUrl!,
+        placeholder: (context, url) => CircularProgressIndicator(),
+        errorWidget: (context, url, error) => Icon(Icons.error),
+      );
+    } else {
+      return SizedBox.shrink();
+    }
+  }
 
   Widget _buildImageMessage() {
-    return CachedNetworkImage(
+    return buildImageWidget();
+    /*return CachedNetworkImage(
       imageUrl: message.imageUrl!,
       placeholder: (context, url) => CircularProgressIndicator(),
       errorWidget: (context, url, error) => Icon(Icons.error),
-    );
+    );*/
   }
 
   Widget _buildGifMessage() {

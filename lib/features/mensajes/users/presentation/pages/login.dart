@@ -23,7 +23,13 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        backgroundColor: Color.fromRGBO(71, 134, 250, 1),
+        title: const Text(
+          'Login',
+          style: TextStyle(
+            color: Colors.white,
+          ),
+        ),
       ),
       body: Padding(
         padding: EdgeInsets.all(40.0),
@@ -34,6 +40,7 @@ class _LoginPageState extends State<LoginPage> {
               controller: _usernameController,
               decoration: const InputDecoration(
                 labelText: 'Username',
+                prefixIcon: Icon(Icons.person),
               ),
             ),
             const SizedBox(height: 16.0),
@@ -42,6 +49,7 @@ class _LoginPageState extends State<LoginPage> {
               obscureText: true,
               decoration: const InputDecoration(
                 labelText: 'Password',
+                prefixIcon: Icon(Icons.password),
               ),
             ),
             const SizedBox(height: 16.0),
@@ -101,7 +109,13 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 );
               },
-              child: const Text('Iniciar sesión'),
+              child: Text(
+                'Iniciar sesión',
+                style: TextStyle(
+                  color: Colors
+                      .white, // Cambia "Colors.white" por el color que desees para el texto
+                ),
+              ),
             ),
           ],
         ),
