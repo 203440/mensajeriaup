@@ -43,7 +43,7 @@ dependencies:
   firebase_storage: ^11.0.1
   image_picker: ^0.8.7+5
   video_player: ^2.6.1
-  audioplayers: ^4.1.0
+  audioplayers: ^0.20.1
   file_picker: ^5.0.0
   cloud_firestore: ^4.8.0
   bloc: ^8.1.2
@@ -52,6 +52,7 @@ dependencies:
   flutter_chat_bubble: ^2.0.2
   intl: ^0.18.1
   chewie: ^1.0.0
+  just_audio: ^0.9.34
 
 dev_dependencies:
   flutter_test:
