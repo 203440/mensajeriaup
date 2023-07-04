@@ -4,7 +4,7 @@ import 'package:mensajeriaup/features/mensajes/chat/domain/usecases/get_messages
 import 'package:mensajeriaup/features/mensajes/chat/domain/usecases/send_message.dart';
 import 'package:mensajeriaup/features/mensajes/chat/presentation/pages/home_chat.dart';
 
-class ChatScreen extends StatelessWidget {
+class MensajeriaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,10 +33,7 @@ class ChatScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => HomeScreen(
-                          getMessages: GetMessages(FirebaseMessageRepository()),
-                          sendMessage: SendMessage(FirebaseMessageRepository()),
-                        ),
+                        builder: (context) => HomeChatScreen(),
                       ),
                     );
                     // Acción al hacer clic en un chat
@@ -59,3 +56,58 @@ class ChatScreen extends StatelessWidget {
     );
   }
 }
+// import 'package:flutter/material.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/data/datasources/message_datasource.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/data/repositories/message_repository_data.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/domain/usecases/get_messages.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/domain/usecases/send_message.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/presentation/blocs/homechatbloc.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/presentation/pages/home_chat.dart';
+
+// // import 'package:cloud_firestore/cloud_firestore.dart';
+// // import 'package:firebase_storage/firebase_storage.dart';
+// // import 'package:firebase_auth/firebase_auth.dart';
+
+// // final firestore = FirebaseFirestore.instance;
+// // final storage = FirebaseStorage.instance;
+// // final auth = FirebaseAuth.instance;
+// // final messageDataSource = FirebaseMessageDataSource(
+// //   firestore: firestore,
+// //   storage: storage,
+// //   auth: auth,
+// // );
+// // final messageRepository = MessageRepositoryImpl(messageDataSource);
+// // // Crea una instancia de MessageRepositoryImpl o de la implementación deseada
+// // final saveMessageUseCase = SendMessage(messageRepository);
+// // final getMessagesUseCase = GetMessages(messageRepository);
+// // final HomeChatBloc homeChat =
+// //     HomeChatBloc(saveMessageUseCase, getMessagesUseCase);
+
+// class MensajeriaScreen extends StatelessWidget {
+//   //final HomeChatBloc homeChatBloc;
+
+//   //MensajeriaScreen({required this.homeChatBloc});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('Mensajería'),
+//       ),
+//       body: Center(
+//         child: ElevatedButton(
+//           onPressed: () {
+//             // Abrir el chat
+//             Navigator.push(
+//               context,
+//               MaterialPageRoute(
+//                 builder: (context) => HomeChatScreen(),
+//               ),
+//             );
+//           },
+//           child: Text('Abrir Chat'),
+//         ),
+//       ),
+//     );
+//   }
+// }

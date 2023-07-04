@@ -1,8 +1,12 @@
 import 'package:bloc/bloc.dart';
 import 'package:mensajeriaup/features/mensajes/users/domain/entities/user.dart';
-import 'package:mensajeriaup/features/mensajes/users/domain/usecases/add_user.dart';
+import 'package:mensajeriaup/features/mensajes/users/domain/usecases/create_games_usecase.dart';
 import 'package:mensajeriaup/features/mensajes/users/domain/usecases/get_users_usecase.dart';
-import 'package:mensajeriaup/features/mensajes/users/domain/usecases/verific_user_usecase.dart';
+import 'package:mensajeriaup/features/mensajes/users/domain/usecases/validate_user_usecase.dart';
+//import 'package:messageapp/features/message/users/domain/entities/user.dart';
+// import 'package:messageapp/features/message/users/domain/usecases/create_games_usecase.dart';
+// import 'package:messageapp/features/message/users/domain/usecases/get_users_usecase.dart';
+// import 'package:messageapp/features/message/users/domain/usecases/validate_user_usecase.dart';
 import 'package:meta/meta.dart';
 
 part 'users_event.dart';
@@ -21,7 +25,7 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
     on<UsersEvent>((event, emit) async {
       if (event is GetUsers) {
         try {
-          List<User> response = await getUsersUsecase.execute();
+          List<User> response = await getUsersUsecase.execute(event.username);
           emit(Loaded(users: response));
         } catch (e) {
           emit(Error(error: e.toString()));
@@ -38,7 +42,7 @@ class UsersBloc extends Bloc<UsersEvent, UsersState> {
       } else if (event is PressLoginUserButton) {
         try {
           emit(UserVerificando());
-          String resultado =
+          Map<String, dynamic> resultado =
               await validateUsersUsecase.execute(event.username, event.passw);
           emit(UserVerificado(estado: resultado));
         } catch (e) {

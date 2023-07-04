@@ -1,4 +1,5 @@
 import 'package:mensajeriaup/features/mensajes/users/domain/entities/user.dart';
+//import 'package:messageapp/features/message/users/domain/entities/user.dart';
 
 class UsersModel extends User {
   UsersModel(

@@ -35,7 +35,7 @@ class ErrorSavingUser extends UsersState {
 class UserVerificando extends UsersState {}
 
 class UserVerificado extends UsersState {
-  final String estado;
+  final Map<String, dynamic> estado;
 
   UserVerificado({required this.estado});
 }

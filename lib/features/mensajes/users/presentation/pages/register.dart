@@ -111,8 +111,8 @@ class _RegisterState extends State<Register> {
               const SizedBox(height: 20.0),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  primary: Color.fromARGB(255, 5, 130,
-                      232), // Cambia "Colors.blue" por el color que desees
+                  primary: Color.fromRGBO(3, 169, 244,
+                      1), // Cambia "Colors.blue" por el color que desees
                 ),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {

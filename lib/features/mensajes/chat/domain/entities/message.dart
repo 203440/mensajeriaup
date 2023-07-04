@@ -1,33 +1,42 @@
-// lib/domain/models/message.dart
-
-// class Message {
-//   final String id;
-//   final String text;
-
-//   Message({required this.id, required this.text});
-// }
-
-// lib/domain/models/message.dart
-
-import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/material.dart';
-
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Message {
-  String id;
-  String text;
+  String? text;
+  String? timestamp;
   String? videoUrl;
   String? audioUrl;
   String? imageUrl;
   String? gifUrl;
 
   Message({
-    required this.id,
     required this.text,
     this.videoUrl,
     this.audioUrl,
     this.imageUrl,
     this.gifUrl,
+    this.timestamp,
   });
+
+  factory Message.fromSnapshot(DocumentSnapshot snapshot) {
+    final data = snapshot.data() as Map<String, dynamic>;
+    return Message(
+      text: data['text'],
+      imageUrl: data['imageUrl'],
+      videoUrl: data['videoUrl'],
+      audioUrl: data['audioUrl'],
+      gifUrl: data['gifUrl'],
+      timestamp: data['timestamp'],
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'text': text,
+      'imageUrl': imageUrl,
+      'videoUrl': videoUrl,
+      'audioUrl': audioUrl,
+      'gifUrl': gifUrl,
+      'timestamp': timestamp,
+    };
+  }
 }

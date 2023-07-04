@@ -9,6 +9,6 @@ class SendMessage {
   SendMessage(this.repository);
 
   Future<void> call(Message message) async {
-    await repository.sendMessage(message);
+    await repository.saveMessage(message);
   }
 }

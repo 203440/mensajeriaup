@@ -9,6 +9,8 @@ class GetMessages {
   GetMessages(this.repository);
 
   Future<List<Message>> call() {
+    print("mi getmessages:");
+    //print(repository);
     return repository.getMessages();
   }
 }

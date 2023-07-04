@@ -1,123 +1,152 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:mensajeriaup/features/mensajes/chat/presentation/pages/home_chat.dart';
 import 'package:mensajeriaup/features/mensajes/chat/presentation/pages/vista.dart';
 import 'package:mensajeriaup/features/mensajes/users/presentation/blocs/users_bloc.dart';
-import 'package:mensajeriaup/features/mensajes/users/presentation/pages/principal.dart';
+import 'package:mensajeriaup/features/mensajes/users/presentation/pages/register.dart';
 
-class LoginPage extends StatefulWidget {
-  @override
-  _LoginPageState createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
+class LoginPage extends StatelessWidget {
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(71, 134, 250, 1),
-        title: const Text(
-          'Login',
-          style: TextStyle(
-            color: Colors.white,
-          ),
-        ),
+        title: Text('Login',
+            style: TextStyle(
+              color: Colors.white,
+            )),
       ),
-      body: Padding(
-        padding: EdgeInsets.all(40.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextFormField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                prefixIcon: Icon(Icons.person),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.password),
-              ),
-            ),
-            const SizedBox(height: 16.0),
-            BlocBuilder<UsersBloc, UsersState>(
-              builder: (context, state) {
-                if (state is UserVerificando) {
-                  return const CircularProgressIndicator();
-                } else if (state is UserVerificado) {
-                  if (state.estado == "correcto") {
-                    return const Text("validado");
-                  } else {
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text('Error de inicio de sesión'),
-                            content: const Text(
-                                'Credenciales inválidas. Por favor, inténtalo de nuevo.'),
-                            actions: [
-                              TextButton(
-                                child: const Text('Cerrar'),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    });
-                    return Container();
-                  }
-                } else if (state is ErrorLoginUser) {
-                  return Text(state.message,
-                      style: const TextStyle(color: Colors.red));
-                } else {
-                  return Container();
-                }
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: Color.fromARGB(255, 5, 130,
-                    232), // Cambia "Colors.blue" por el color que desees
-              ),
-              onPressed: () {
-                String username = _usernameController.text;
-                String password = _passwordController.text;
-
-                context.read<UsersBloc>().add(
-                    PressLoginUserButton(username: username, passw: password));
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatScreen(),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(top: 6.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(height: 200.0),
+              FractionallySizedBox(
+                widthFactor: 0.8,
+                child: TextField(
+                  controller: _emailController,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.person),
+                    labelText: 'Username',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
                   ),
-                );
-              },
-              child: Text(
-                'Iniciar sesión',
-                style: TextStyle(
-                  color: Colors
-                      .white, // Cambia "Colors.white" por el color que desees para el texto
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: 16.0),
+              FractionallySizedBox(
+                widthFactor: 0.8,
+                child: TextField(
+                  controller: _passwordController,
+                  decoration: InputDecoration(
+                    prefixIcon: Icon(Icons.key),
+                    labelText: 'Password',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  obscureText: true,
+                ),
+              ),
+              SizedBox(height: 24.0),
+              FractionallySizedBox(
+                widthFactor: 0.8,
+                child: ElevatedButton(
+                  onPressed: () {
+                    String username = _emailController.text;
+                    String password = _passwordController.text;
+
+                    context.read<UsersBloc>().add(PressLoginUserButton(
+                        username: username, passw: password));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Color.fromRGBO(3, 169, 244, 1),
+                    onPrimary: Colors.white,
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12.0),
+                    ),
+                  ),
+                  child: Text(
+                    'Iniciar sesión',
+                    style: TextStyle(
+                      fontSize: 18.0,
+                    ),
+                  ),
+                ),
+              ),
+              BlocBuilder<UsersBloc, UsersState>(
+                builder: (context, state) {
+                  if (state is UserVerificando) {
+                    return const CircularProgressIndicator();
+                  } else if (state is UserVerificado) {
+                    if (state.estado['estado'] == "correcto") {
+                      print("nombre del estado");
+                      print(state.estado['username']);
+                      String usernames = _emailController.text;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MensajeriaScreen()),
+                        );
+                      });
+                      return const SizedBox();
+                    } else {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text('Error de inicio de sesión'),
+                              content: const Text(
+                                  'Credenciales inválidas. Por favor, inténtalo de nuevo.'),
+                              actions: [
+                                TextButton(
+                                  child: const Text('Cerrar'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      });
+                    }
+                    return Container();
+                  } else if (state is ErrorLoginUser) {
+                    return Text(state.message,
+                        style: const TextStyle(color: Colors.red));
+                  } else {
+                    return Container();
+                  }
+                },
+              ),
+              SizedBox(height: 16.0),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Register(),
+                    ),
+                  );
+                },
+                child: Text(
+                  '¿No tienes cuenta? Crear Una',
+                  style: TextStyle(
+                    color: Color.fromRGBO(3, 169, 244, 1).withOpacity(0.7),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

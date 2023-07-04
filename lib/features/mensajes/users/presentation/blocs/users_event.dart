@@ -3,7 +3,10 @@ part of 'users_bloc.dart';
 @immutable
 abstract class UsersEvent {}
 
-class GetUsers extends UsersEvent {}
+class GetUsers extends UsersEvent {
+  final String username;
+  GetUsers({required this.username});
+}
 
 class PressCreateUserButton extends UsersEvent {
   final String username;

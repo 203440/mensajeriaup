@@ -1,108 +1,117 @@
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mensajeriaup/features/mensajes/chat/domain/entities/message.dart';
-import 'package:mensajeriaup/features/mensajes/chat/domain/usecases/get_messages.dart';
-import 'package:mensajeriaup/features/mensajes/chat/domain/usecases/send_message.dart';
-import 'package:mensajeriaup/features/mensajes/chat/presentation/widgets/message_list.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:video_player/video_player.dart';
 
-class HomeScreen extends StatefulWidget {
-  final GetMessages getMessages;
-  final SendMessage sendMessage;
-
-  HomeScreen({required this.getMessages, required this.sendMessage});
-
+class HomeChatScreen extends StatefulWidget {
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  _HomeChatScreenState createState() => _HomeChatScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController _textController = TextEditingController();
+class _HomeChatScreenState extends State<HomeChatScreen> {
+  final TextEditingController _messageController = TextEditingController();
+  File? selectedImage;
+  File? selectedVideo;
+  File? selectedAudio;
+  File? selectedGif;
   List<Message> _messages = [];
-  final FirebaseStorage _storage = FirebaseStorage.instance;
+  String _errorMessage = '';
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
     super.initState();
-    _fetchMessages();
+    _loadMessages();
   }
 
+  @override
   void dispose() {
-    _textController.dispose();
+    _messageController.dispose();
     super.dispose();
   }
 
-  void _fetchMessages() async {
-    final messages = await widget.getMessages();
-    messages.sort((a, b) => a.id.compareTo(b.id));
-    setState(() {
-      _messages = messages;
-    });
-  }
-
-  void _sendMessage(String text) async {
-    final message = Message(
-      id: DateTime.now().toString(),
-      text: text,
-      /*imageUrl: text,
-      videoUrl: text,
-      gifUrl: text,*/
-    );
-    await widget.sendMessage(message);
-    _textController.clear();
-    _fetchMessages();
-  }
-
-  Future<void> _pickFile(String type) async {
-    FilePickerResult? result;
-    if (type == 'video') {
-      result = await FilePicker.platform.pickFiles(type: FileType.video);
-    } else if (type == 'audio') {
-      result = await FilePicker.platform.pickFiles(type: FileType.audio);
-    } else if (type == 'image') {
-      result = await FilePicker.platform.pickFiles(type: FileType.image);
-    } else if (type == 'gif') {
-      result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['gif'],
-      );
+  Future<void> _loadMessages() async {
+    try {
+      final snapshot = await _firestore.collection('messages').get();
+      final messages =
+          snapshot.docs.map((doc) => Message.fromSnapshot(doc)).toList();
+      setState(() {
+        _messages = messages;
+      });
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error al cargar los mensajes :(';
+      });
     }
+  }
 
+  Future<void> selectImage() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null && result.files.isNotEmpty) {
-      final file = File(result.files.single.path!);
-      if (file.existsSync()) {
-        final fileName = file.path.split('/').last;
-        final ref = _storage.ref().child('$type/$fileName');
-        final uploadTask = ref.putFile(file);
-        final snapshot = await uploadTask.whenComplete(() => null);
-        final downloadUrl = await snapshot.ref.getDownloadURL();
+      setState(() {
+        selectedImage = File(result.files.single.path!);
+        print(selectedImage);
+      });
+    }
+  }
 
-        final message = Message(
-          id: DateTime.now().toString(),
-          text: '',
-          videoUrl: '',
-          audioUrl: '',
-          imageUrl: '',
-          gifUrl: '',
-        );
+  Future<void> selectVideo() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.video);
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        selectedVideo = File(result.files.single.path!);
+      });
+    }
+  }
 
-        if (type == 'video') {
-          message.videoUrl = downloadUrl;
-          print('Video URL: ${message.videoUrl}');
-        } else if (type == 'audio') {
-          message.audioUrl = downloadUrl;
-        } else if (type == 'image') {
-          message.imageUrl = downloadUrl;
-        } else if (type == 'gif') {
-          message.gifUrl = downloadUrl;
-        }
+  Future<void> selectAudio() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.audio);
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        selectedAudio = File(result.files.single.path!);
+      });
+    }
+  }
 
-        await widget.sendMessage(message);
-        _fetchMessages();
-      } else {
-        print('El archivo no existe: ${file.path}');
-      }
+  Future<void> selectGif() async {
+    final result = await FilePicker.platform
+        .pickFiles(type: FileType.custom, allowedExtensions: ['gif']);
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        selectedGif = File(result.files.single.path!);
+      });
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    final currentTime = DateTime.now();
+    final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(currentTime);
+
+    final message = Message(
+      text: _messageController.text,
+      imageUrl: selectedImage != null ? selectedImage!.path : null,
+      videoUrl: selectedVideo != null ? selectedVideo!.path : null,
+      audioUrl: selectedAudio != null ? selectedAudio!.path : null,
+      gifUrl: selectedGif != null ? selectedGif!.path : null,
+      timestamp: formattedTime,
+    );
+
+    try {
+      await _firestore.collection('messages').add(message.toMap());
+      setState(() {
+        selectedImage = null;
+        selectedVideo = null;
+        selectedAudio = null;
+        selectedGif = null;
+      });
+      _messageController.clear();
+      _loadMessages();
+    } catch (e) {
+      // Handle any error while sending the message to Firestore
     }
   }
 
@@ -121,7 +130,49 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Column(
         children: [
           Expanded(
-            child: MessageList(messages: _messages),
+            child: ListView.builder(
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                final message = _messages[index];
+                return ListTile(
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (message.imageUrl != null)
+                        Image.file(File(message.imageUrl!)),
+                      if (message.videoUrl != null)
+                        VideoPlayerController.file(File(message.videoUrl!))
+                                .value
+                                .isInitialized
+                            ? AspectRatio(
+                                aspectRatio: VideoPlayerController.file(
+                                        File(message.videoUrl!))
+                                    .value
+                                    .aspectRatio,
+                                child: VideoPlayer(
+                                  VideoPlayerController.file(
+                                      File(message.videoUrl!)),
+                                ),
+                              )
+                            : Container(),
+                      if (message.audioUrl != null)
+                        // Renderizar el reproductor de audio
+                        Container(), // Aquí debes implementar la lógica para reproducir el audio
+                      if (message.gifUrl != null)
+                        Image.file(File(message.gifUrl!)),
+                      if (message.text != null) Text(message.text!),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          message.timestamp ?? '',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
@@ -129,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _textController,
+                    controller: _messageController,
                     decoration: InputDecoration(
                       hintText: 'Ingrese un mensaje...',
                     ),
@@ -137,23 +188,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 IconButton(
                   icon: Icon(Icons.attach_file),
-                  onPressed: () => _pickFile('audio'),
+                  onPressed: () => selectAudio(),
                 ),
                 IconButton(
                   icon: Icon(Icons.camera_alt),
-                  onPressed: () => _pickFile('image'),
+                  onPressed: () => selectImage(),
                 ),
                 IconButton(
                   icon: Icon(Icons.video_library),
-                  onPressed: () => _pickFile('video'),
+                  onPressed: () => selectVideo(),
                 ),
                 IconButton(
                   icon: Icon(Icons.gif),
-                  onPressed: () => _pickFile('gif'),
+                  onPressed: () => selectGif(),
                 ),
                 IconButton(
                   icon: Icon(Icons.send),
-                  onPressed: () => _sendMessage(_textController.text),
+                  onPressed: () => _sendMessage(),
                 ),
               ],
             ),
@@ -163,3 +214,201 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+
+// import 'dart:io';
+// import 'package:flutter/material.dart';
+// import 'package:file_picker/file_picker.dart';
+// import 'package:intl/intl.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/domain/entities/message.dart';
+// import 'package:mensajeriaup/features/mensajes/chat/presentation/widget/message_list.dart';
+// import 'package:video_player/video_player.dart';
+// import 'package:audioplayers/audioplayers.dart';
+
+// class HomeChatScreen extends StatefulWidget {
+//   @override
+//   _HomeChatScreenState createState() => _HomeChatScreenState();
+// }
+
+// class _HomeChatScreenState extends State<HomeChatScreen> {
+//   final TextEditingController _messageController = TextEditingController();
+//   File? selectedImage;
+//   File? selectedVideo;
+//   File? selectedAudio;
+//   File? selectedGif;
+//   List<Message> _messages = [];
+//   String _errorMessage = '';
+//   bool _isOffline = false;
+//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadMessages();
+//   }
+
+//   @override
+//   void dispose() {
+//     _messageController.dispose();
+//     super.dispose();
+//   }
+
+//   Future<void> _loadMessages() async {
+//     try {
+//       final snapshot = await _firestore.collection('messages').get();
+//       final messages =
+//           snapshot.docs.map((doc) => Message.fromSnapshot(doc)).toList();
+//       setState(() {
+//         _messages = messages;
+//       });
+//     } catch (e) {
+//       setState(() {
+//         _errorMessage = 'Error al cargar los mensajes :(';
+//       });
+//     }
+//   }
+
+//   Future<void> selectImage() async {
+//     final result = await FilePicker.platform.pickFiles(type: FileType.image);
+//     if (result != null && result.files.isNotEmpty) {
+//       setState(() {
+//         selectedImage = File(result.files.single.path!);
+//         print(selectedImage);
+//       });
+//     }
+//   }
+
+//   Future<void> selectVideo() async {
+//     final result = await FilePicker.platform.pickFiles(type: FileType.video);
+//     if (result != null && result.files.isNotEmpty) {
+//       setState(() {
+//         selectedVideo = File(result.files.single.path!);
+//       });
+//     }
+//   }
+
+//   Future<void> selectAudio() async {
+//     final result = await FilePicker.platform.pickFiles(type: FileType.audio);
+//     if (result != null && result.files.isNotEmpty) {
+//       setState(() {
+//         selectedAudio = File(result.files.single.path!);
+//       });
+//     }
+//   }
+
+//   Future<void> selectGif() async {
+//     final result = await FilePicker.platform
+//         .pickFiles(type: FileType.custom, allowedExtensions: ['gif']);
+//     if (result != null && result.files.isNotEmpty) {
+//       setState(() {
+//         selectedGif = File(result.files.single.path!);
+//       });
+//     }
+//   }
+
+//   Future<void> _sendMessage() async {
+//     final currentTime = DateTime.now();
+//     final formattedTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(currentTime);
+
+//     final message = Message(
+//       text: _messageController.text,
+//       imageUrl: selectedImage,
+//       videoUrl: selectedVideo,
+//       audioUrl: selectedAudio,
+//       gifUrl: selectedGif,
+//       timestamp: formattedTime,
+//     );
+
+//     try {
+//       await _firestore.collection('messages').add(message.toMap());
+//       setState(() {
+//         selectedImage = null;
+//         selectedVideo = null;
+//         selectedAudio = null;
+//         selectedGif = null;
+//       });
+//       _messageController.clear();
+//       _loadMessages();
+//     } catch (e) {
+//       // Handle any error while sending the message to Firestore
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         backgroundColor: Color.fromRGBO(71, 134, 250, 1),
+//         title: Text(
+//           'Chat',
+//           style: TextStyle(
+//             color: Colors.white,
+//           ),
+//         ),
+//       ),
+//       body: Column(
+//         children: [
+//           Expanded(
+//             child: ListView.builder(
+//               itemCount: _messages.length,
+//               itemBuilder: (context, index) {
+//                 final message = _messages[index];
+//                 return ListTile(
+//                   title: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       MessageBubble(message: message),
+//                       Align(
+//                         alignment: Alignment.centerRight,
+//                         child: Text(
+//                           message.timestamp ?? '',
+//                           style: TextStyle(fontSize: 12, color: Colors.grey),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             ),
+//           ),
+//           Container(
+//             padding: EdgeInsets.symmetric(horizontal: 16.0),
+//             child: Row(
+//               children: [
+//                 Expanded(
+//                   child: TextField(
+//                     controller: _messageController,
+//                     decoration: InputDecoration(
+//                       hintText: 'Ingrese un mensaje...',
+//                     ),
+//                   ),
+//                 ),
+//                 IconButton(
+//                   icon: Icon(Icons.attach_file),
+//                   onPressed: () => selectAudio(),
+//                 ),
+//                 IconButton(
+//                   icon: Icon(Icons.camera_alt),
+//                   onPressed: () => selectImage(),
+//                 ),
+//                 IconButton(
+//                   icon: Icon(Icons.video_library),
+//                   onPressed: () => selectVideo(),
+//                 ),
+//                 IconButton(
+//                   icon: Icon(Icons.gif),
+//                   onPressed: () => selectGif(),
+//                 ),
+//                 IconButton(
+//                   icon: Icon(Icons.send),
+//                   onPressed: () => _sendMessage(),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }

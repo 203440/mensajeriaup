@@ -1,16 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:mensajeriaup/features/mensajes/chat/data/datasources/message_datasource.dart';
 import 'package:mensajeriaup/features/mensajes/users/presentation/blocs/users_bloc.dart';
 import 'package:mensajeriaup/features/mensajes/users/presentation/pages/principal.dart';
-//import 'package:mensajeriaup/features/mensajes/users/presentation/pages/login.dart';
-//import 'package:mensajeriaup/features/mensajes/users/presentation/pages/register.dart';
-//import 'package:mensajeriaup/testfirebase.dart';
 import 'package:mensajeriaup/usecase_config.dart';
-//import 'features/mensajes/users/presentation/pages/sign.dart';
-//import 'firebase_options.dart';
-
-UsecaseConfig usecaseConfig = UsecaseConfig();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +21,15 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    final firebaseMessageDataSource = FirebaseMessageDataSource(
+      firestore: FirebaseFirestore.instance,
+      storage: FirebaseStorage.instance,
+      auth: FirebaseAuth.instance,
+    );
+
+//FirebaseMessageDataSource firebaseMessageDataSource = FirebaseMessageDataSource();
+    UsecaseConfig usecaseConfig = UsecaseConfig(firebaseMessageDataSource);
+
     Firebase.initializeApp();
     return MultiBlocProvider(
       providers: [

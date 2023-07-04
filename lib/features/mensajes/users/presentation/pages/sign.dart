@@ -13,7 +13,7 @@ class _SignState extends State<Sign> {
   @override
   void initState() {
     super.initState();
-    context.read<UsersBloc>().add(GetUsers());
+    //context.read<UsersBloc>().add(GetUsers());
   }
 
   @override
