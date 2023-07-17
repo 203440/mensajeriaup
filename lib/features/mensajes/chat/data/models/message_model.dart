@@ -1,4 +1,4 @@
-import 'dart:io';
+//import 'dart:io';
 import 'package:mensajeriaup/features/mensajes/chat/domain/entities/message.dart';
 
 class MessageModel extends Message {
@@ -8,22 +8,24 @@ class MessageModel extends Message {
     String? videoUrl,
     String? audioUrl,
     String? timestamp,
+    String? pdfUrl,
   }) : super(
           text: text,
           imageUrl: imageUrl,
           videoUrl: videoUrl,
           audioUrl: audioUrl,
           timestamp: timestamp,
+          pdfUrl: pdfUrl,
         );
 
   factory MessageModel.fromJson(Map<String, dynamic> json) {
     return MessageModel(
-      text: json['text'],
-      timestamp: json['timestamp'],
-      imageUrl: json['imageUrl'],
-      videoUrl: json['videoUrl'],
-      audioUrl: json['audioUrl'],
-    );
+        text: json['text'],
+        timestamp: json['timestamp'],
+        imageUrl: json['imageUrl'],
+        videoUrl: json['videoUrl'],
+        audioUrl: json['audioUrl'],
+        pdfUrl: json['pdfUrl']);
   }
 
   Map<String, dynamic> toJson() {
@@ -33,6 +35,7 @@ class MessageModel extends Message {
       'imageUrl': imageUrl,
       'videoUrl': videoUrl,
       'audioUrl': audioUrl,
+      'pdfUrl': pdfUrl,
     };
   }
 
@@ -43,6 +46,7 @@ class MessageModel extends Message {
       videoUrl: videoUrl,
       audioUrl: audioUrl,
       timestamp: timestamp,
+      pdfUrl: pdfUrl,
     );
   }
 
@@ -52,6 +56,7 @@ class MessageModel extends Message {
     String? imageUrl,
     String? videoUrl,
     String? audioUrl,
+    String? pdfUrl,
   }) {
     return MessageModel(
       text: text ?? this.text,
@@ -59,6 +64,7 @@ class MessageModel extends Message {
       imageUrl: imageUrl ?? this.imageUrl,
       videoUrl: videoUrl ?? this.videoUrl,
       audioUrl: audioUrl ?? this.audioUrl,
+      pdfUrl: pdfUrl ?? this.pdfUrl,
     );
   }
 
@@ -69,6 +75,7 @@ class MessageModel extends Message {
       imageUrl: message.imageUrl,
       videoUrl: message.videoUrl,
       audioUrl: message.audioUrl,
+      pdfUrl: message.pdfUrl,
     );
   }
 }

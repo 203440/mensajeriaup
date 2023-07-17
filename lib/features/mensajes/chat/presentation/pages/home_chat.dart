@@ -1,18 +1,17 @@
 import 'dart:io';
-
+import 'dart:async';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:location/location.dart';
 import 'package:mensajeriaup/features/mensajes/chat/domain/entities/message.dart';
-//import 'package:video_player/video_player.dart';
-//import 'package:audioplayers/audioplayers.dart';
 import 'package:just_audio/just_audio.dart';
-//import 'package:video_player/video_player.dart';
-
+import 'package:mensajeriaup/features/mensajes/chat/presentation/bloc/bloc/message_bloc.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class HomeChatScreen extends StatefulWidget {
   @override
@@ -25,39 +24,38 @@ class _HomeChatScreenState extends State<HomeChatScreen> {
   File? selectedVideo;
   File? selectedAudio;
   File? selectedGif;
-  List<Message> _messages = [];
-  String _errorMessage = '';
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  File? selectedPdf;
+  late MessageBloc _messageBloc;
+  Location location = Location();
+  LocationData? currentLocation;
+  CameraPosition? initialCameraPosition;
 
   @override
   void initState() {
     super.initState();
-    _loadMessages();
+    _messageBloc = MessageBloc();
+    _messageBloc.dispatch(LoadMessagesEvent());
   }
 
   @override
   void dispose() {
     _messageController.dispose();
+    _messageBloc.dispose();
     super.dispose();
   }
 
-  Future<void> _loadMessages() async {
-    try {
-      final snapshot =
-          await _firestore.collection('messages').orderBy('timestamp').get();
-      final messages =
-          snapshot.docs.map((doc) => Message.fromSnapshot(doc)).toList();
-      setState(() {
-        _messages = messages;
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error al cargar los mensajes :(';
-      });
+  Future<void> deleteAllFiles() async {
+    final FirebaseStorage storage = FirebaseStorage.instance;
+    final Reference rootRef = storage.ref();
+
+    final ListResult result = await rootRef.listAll();
+
+    for (final Reference ref in result.items) {
+      await ref.delete();
     }
   }
 
-  Future<void> selectImage() async {
+  FutureOr<void> selectImage() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.image);
     if (result != null && result.files.isNotEmpty) {
       setState(() {
@@ -94,6 +92,16 @@ class _HomeChatScreenState extends State<HomeChatScreen> {
     }
   }
 
+  Future<void> selectPdf() async {
+    final result = await FilePicker.platform
+        .pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    if (result != null && result.files.isNotEmpty) {
+      setState(() {
+        selectedPdf = File(result.files.single.path!);
+      });
+    }
+  }
+
   Future<String> uploadFile(File file) async {
     final fileName = DateTime.now().millisecondsSinceEpoch.toString();
     final destination = 'uploads/$fileName';
@@ -115,6 +123,15 @@ class _HomeChatScreenState extends State<HomeChatScreen> {
       timestamp: formattedTime,
     );
 
+    // Subir archivos y obtener las URL de descarga antes de enviar el mensaje
+
+    await uploadSelectedFiles(message);
+
+    _messageBloc.dispatch(SendMessageEvent(message));
+    _clearFields();
+  }
+
+  Future<void> uploadSelectedFiles(Message message) async {
     try {
       if (selectedImage != null) {
         final imageUrl = await uploadFile(selectedImage!);
@@ -136,20 +153,60 @@ class _HomeChatScreenState extends State<HomeChatScreen> {
         message.gifUrl = gifUrl;
       }
 
-      await _firestore.collection('messages').add(message.toMap());
-
-      setState(() {
-        selectedImage = null;
-        selectedVideo = null;
-        selectedAudio = null;
-        selectedGif = null;
-      });
-
-      _messageController.clear();
-      _loadMessages();
+      if (selectedPdf != null) {
+        final pdfUrl = await uploadFile(selectedPdf!);
+        message.pdfUrl = pdfUrl;
+      }
     } catch (e) {
-      // Handle any error while sending the message to Firestore
+      // Manejar errores de carga de archivos si es necesario
+      print('Error al cargar los archivos: $e');
     }
+  }
+
+  Future<void> sendLocationMessage() async {
+    try {
+      currentLocation = await location.getLocation();
+      if (currentLocation != null) {
+        setState(() {
+          initialCameraPosition = CameraPosition(
+            target: LatLng(
+              currentLocation!.latitude!,
+              currentLocation!.longitude!,
+            ),
+            zoom: 15,
+          );
+        });
+      }
+    } catch (e) {
+      // Maneja cualquier error al obtener la ubicación
+    }
+
+    if (currentLocation != null) {
+      final message = Message(
+        text: 'Mi ubicación',
+        timestamp: DateTime.now().toString(),
+        latitude: currentLocation!.latitude,
+        longitude: currentLocation!.longitude,
+      );
+
+      // Subir archivos y obtener las URL de descarga antes de enviar el mensaje
+      await uploadSelectedFiles(message);
+
+      _messageBloc.dispatch(SendMessageEvent(message));
+      _clearFields();
+    }
+  }
+
+  void _clearFields() {
+    setState(() {
+      selectedImage = null;
+      selectedVideo = null;
+      selectedAudio = null;
+      selectedGif = null;
+      selectedPdf = null;
+      initialCameraPosition = null;
+      _messageController.clear();
+    });
   }
 
   @override
@@ -157,68 +214,138 @@ class _HomeChatScreenState extends State<HomeChatScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color.fromRGBO(71, 134, 250, 1),
-        title: Text(
+        title: const Text(
           'Chat',
           style: TextStyle(
             color: Colors.white,
           ),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () => deleteAllFiles(),
+          ),
+        ],
       ),
       body: Column(
         children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return ListTile(
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Color.fromRGBO(137, 212, 172,
-                              1), // Cambia el color según tus preferencias
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        padding: EdgeInsets.all(8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (message.imageUrl != null)
-                              Image.network(
-                                message.imageUrl!,
-                                height: 250,
-                                width: 250,
+          StreamBuilder<MessageState>(
+            stream: _messageBloc.chatStream,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                final state = snapshot.data!;
+                if (state is LoadingState) {
+                  return CircularProgressIndicator();
+                } else if (state is LoadedState) {
+                  final messages = state.messages;
+                  return Expanded(
+                    child: ListView.builder(
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) {
+                        final message = messages[index];
+                        return ListTile(
+                          title: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Color.fromRGBO(137, 212, 172, 1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                padding: EdgeInsets.all(8),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    if (message.imageUrl != null)
+                                      Image.network(
+                                        message.imageUrl!,
+                                        height: 250,
+                                        width: 250,
+                                      ),
+                                    if (message.videoUrl != null)
+                                      Container(
+                                        width: 300,
+                                        child: AspectRatio(
+                                          aspectRatio: 16 / 10,
+                                          child: VideoPlayerWidget(
+                                            videoUrl: message.videoUrl!,
+                                          ),
+                                        ),
+                                      ),
+                                    if (message.audioUrl != null)
+                                      Container(
+                                        width: 250,
+                                        child: AudioPlayerWidget(
+                                          audioUrl: message.audioUrl!,
+                                        ),
+                                      ),
+                                    if (message.gifUrl != null)
+                                      Container(
+                                        width: 300,
+                                        child: AspectRatio(
+                                          aspectRatio: 16 / 10,
+                                          child: VideoPlayerWidget(
+                                            videoUrl: message.gifUrl!,
+                                          ),
+                                        ),
+                                      ),
+                                    if (message.pdfUrl != null)
+                                      Container(
+                                        height: 300,
+                                        child: PdfViewerWidget(
+                                          pdfUrl: message.pdfUrl!,
+                                        ),
+                                      ),
+                                    if (message.text != null)
+                                      Text(message.text!),
+                                    if (message.latitude != null &&
+                                        message.longitude != null)
+                                      ElevatedButton(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => MapScreen(
+                                                latitude: message.latitude!,
+                                                longitude: message.longitude!,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        child: Text('Ver ubicación'),
+                                      ),
+                                  ],
+                                ),
                               ),
-                            if (message.videoUrl != null)
-                              AspectRatio(
-                                aspectRatio: 16 / 10,
-                                child: VideoPlayerWidget(
-                                    videoUrl: message.videoUrl!),
-                              ),
-                            if (message.audioUrl != null)
-                              AudioPlayerWidget(audioUrl: message.audioUrl!),
-                            if (message.gifUrl != null)
-                              VideoPlayerWidget(videoUrl: message.gifUrl!),
-                            if (message.text != null) Text(message.text!),
-                          ],
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Text(
-                          message.timestamp ?? '',
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                } else if (state is ErrorState) {
+                  return Text(state.errorMessage);
+                }
+              }
+              return Container();
+            },
           ),
+          if (initialCameraPosition != null)
+            Container(
+              height: 300,
+              child: GoogleMap(
+                initialCameraPosition: initialCameraPosition!,
+                markers: {
+                  Marker(
+                    markerId: MarkerId('currentLocation'),
+                    position: LatLng(
+                      currentLocation!.latitude!,
+                      currentLocation!.longitude!,
+                    ),
+                  ),
+                },
+              ),
+            ),
           Container(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Row(
@@ -232,7 +359,7 @@ class _HomeChatScreenState extends State<HomeChatScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.attach_file),
+                  icon: Icon(Icons.audio_file),
                   onPressed: () => selectAudio(),
                 ),
                 IconButton(
@@ -248,12 +375,20 @@ class _HomeChatScreenState extends State<HomeChatScreen> {
                   onPressed: () => selectGif(),
                 ),
                 IconButton(
+                  icon: Icon(Icons.attach_file),
+                  onPressed: () => selectPdf(),
+                ),
+                IconButton(
+                  icon: Icon(Icons.location_on),
+                  onPressed: () => sendLocationMessage(),
+                ),
+                IconButton(
                   icon: Icon(Icons.send),
                   onPressed: () => _sendMessage(),
                 ),
               ],
             ),
-          ),
+          )
         ],
       ),
     );
@@ -369,8 +504,65 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
             }
           },
         ),
-        Text('Audio Player'),
+        Text('Audio'),
       ],
+    );
+  }
+}
+
+class PdfViewerWidget extends StatelessWidget {
+  final String pdfUrl;
+
+  const PdfViewerWidget({required this.pdfUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    return PDFView(
+      filePath: pdfUrl,
+      swipeHorizontal: true,
+      autoSpacing: false,
+      pageFling: false,
+      pageSnap: true,
+      defaultPage: 0,
+      fitPolicy: FitPolicy.BOTH,
+      preventLinkNavigation: false,
+      onError: (error) {
+        // Maneja cualquier error si es necesario
+      },
+      onPageError: (page, error) {
+        // Maneja errores de página si es necesario
+      },
+    );
+  }
+}
+
+class MapScreen extends StatelessWidget {
+  final double latitude;
+  final double longitude;
+
+  const MapScreen({
+    required this.latitude,
+    required this.longitude,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Ubicación'),
+      ),
+      body: GoogleMap(
+        initialCameraPosition: CameraPosition(
+          target: LatLng(latitude, longitude),
+          zoom: 15,
+        ),
+        markers: {
+          Marker(
+            markerId: MarkerId('currentLocation'),
+            position: LatLng(latitude, longitude),
+          ),
+        },
+      ),
     );
   }
 }

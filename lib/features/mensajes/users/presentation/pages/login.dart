@@ -88,7 +88,7 @@ class LoginPage extends StatelessWidget {
                     if (state.estado['estado'] == "correcto") {
                       print("nombre del estado");
                       print(state.estado['username']);
-                      String usernames = _emailController.text;
+                      //String usernames = _emailController.text;
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         Navigator.push(
                           context,

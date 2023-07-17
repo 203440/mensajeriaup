@@ -7,6 +7,9 @@ class Message {
   String? audioUrl;
   String? imageUrl;
   String? gifUrl;
+  String? pdfUrl;
+  double? latitude;
+  double? longitude;
 
   Message({
     required this.text,
@@ -15,6 +18,9 @@ class Message {
     this.imageUrl,
     this.gifUrl,
     this.timestamp,
+    this.pdfUrl,
+    this.latitude,
+    this.longitude,
   });
 
   factory Message.fromSnapshot(DocumentSnapshot snapshot) {
@@ -25,7 +31,10 @@ class Message {
       videoUrl: data['videoUrl'],
       audioUrl: data['audioUrl'],
       gifUrl: data['gifUrl'],
+      pdfUrl: data['pdfUrl'],
       timestamp: data['timestamp'],
+      latitude: data['latitude'],
+      longitude: data['longitude'],
     );
   }
 
@@ -36,7 +45,10 @@ class Message {
       'videoUrl': videoUrl,
       'audioUrl': audioUrl,
       'gifUrl': gifUrl,
+      'pdfUrl': pdfUrl,
       'timestamp': timestamp,
+      'latitude': latitude,
+      'longitude': longitude,
     };
   }
 }
